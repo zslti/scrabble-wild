@@ -6,9 +6,6 @@ This project aims to be an enhanced version of the board game with a clean UI an
 
 🚧 The project is currently a work in progress.
 
-# 🚀 Demo
-tbd
-
 # 🔥Features
 
 🔓 Public and private lobbies 
@@ -22,6 +19,12 @@ tbd
 👫 Easily invite your friends with an invitation link
 
 🎮 Ability to play the game... obviously
+
+# 🚀 Demo
+
+<p align="center">
+  <img src="https://github.com/zslti/scrabble-wild/assets/82903515/932085fb-a57e-46f4-9b4f-44874ea6f431" alt="animated" />
+</p>
 
 # ⁉️ How to play?
 
