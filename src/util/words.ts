@@ -2,15 +2,6 @@ import { json } from "stream/consumers";
 import { letterScores } from "./scoring";
 
 export async function getWordDefinition(word: string, language: keyof typeof words){
-    // const url = `https://dictionary-by-api-ninjas.p.rapidapi.com/v1/dictionary?word=${word}`;
-    // const options = {
-    //     method: 'GET',
-    //     headers: {
-    //         'X-RapidAPI-Key': '332dfaf5aamsh67110e972cc4e82p176ee8jsnc8b2962d1862',
-    //         'X-RapidAPI-Host': 'dictionary-by-api-ninjas.p.rapidapi.com'
-    //     }
-    // }; //megy csak fos
-
     if(language != 'en'){
         word = await translateText(word, language, 'en') ?? '';
     }
@@ -18,8 +9,8 @@ export async function getWordDefinition(word: string, language: keyof typeof wor
     const url = `https://dictionary-data-api.p.rapidapi.com/definition/${word}`;
     const options = {
         method: 'GET',
-        headers: {
-            'X-RapidAPI-Key': '332dfaf5aamsh67110e972cc4e82p176ee8jsnc8b2962d1862',
+        headers: { // get your api key at https://rapidapi.com/effeyerulez/api/dictionary-data-api/
+            'X-RapidAPI-Key': '',
             'X-RapidAPI-Host': 'dictionary-data-api.p.rapidapi.com'
         }
     };
@@ -42,9 +33,9 @@ async function translateText(text: string, from: string, to: string){
     const url = 'https://deep-translate1.p.rapidapi.com/language/translate/v2';
     const options = {
         method: 'POST',
-        headers: {
+        headers: { // get your api key at https://rapidapi.com/gatzuma/api/deep-translate1
             'content-type': 'application/json',
-            'X-RapidAPI-Key': '332dfaf5aamsh67110e972cc4e82p176ee8jsnc8b2962d1862',
+            'X-RapidAPI-Key': '',
             'X-RapidAPI-Host': 'deep-translate1.p.rapidapi.com'
         },
         body: JSON.stringify({
