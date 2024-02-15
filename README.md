@@ -23,7 +23,7 @@ This project aims to be an enhanced version of the board game with a clean UI an
 # 🚀 Demo
 
 <p align="center">
-  <img src="https://github.com/zslti/scrabble-wild/assets/82903515/932085fb-a57e-46f4-9b4f-44874ea6f431" alt="animated" />
+  <img src="https://github.com/zslti/scrabble-wild/assets/82903515/0e9b5b84-b895-424d-9c1c-9700057ca23a" alt="" />
 </p>
 
 # ⁉️ How to play?
