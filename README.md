@@ -53,8 +53,6 @@ Each new word must connect to an existing word on the game board.
 
 ❌ Scoreboard
 
-❌ Round timer
-
 ❌ Achievements
 
 ❌ Power-ups when you play longer words
