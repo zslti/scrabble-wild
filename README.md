@@ -49,7 +49,7 @@ Each new word must connect to an existing word on the game board.
 
 ✅ Implement base game features
 
-❌ Round timer
+✅ Round timer
 
 ❌ Scoreboard
 
