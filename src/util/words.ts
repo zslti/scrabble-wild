@@ -1,16 +1,15 @@
-import { json } from "stream/consumers";
 import { letterScores } from "./scoring";
 
-export async function getWordDefinition(word: string, language: keyof typeof words){
-    if(language != 'en'){
+export async function getWordDefinition(word: string, language: keyof typeof words) {
+    if(language != 'en') {
         word = await translateText(word, language, 'en') ?? '';
     }
 
     const url = `https://dictionary-data-api.p.rapidapi.com/definition/${word}`;
     const options = {
         method: 'GET',
-        headers: { // get your api key at https://rapidapi.com/effeyerulez/api/dictionary-data-api/
-            'X-RapidAPI-Key': '',
+        headers: {
+            'X-RapidAPI-Key': '', // your api key
             'X-RapidAPI-Host': 'dictionary-data-api.p.rapidapi.com'
         }
     };
@@ -29,13 +28,13 @@ export async function getWordDefinition(word: string, language: keyof typeof wor
     }
 }
 
-async function translateText(text: string, from: string, to: string){
+async function translateText(text: string, from: string, to: string) {
     const url = 'https://deep-translate1.p.rapidapi.com/language/translate/v2';
     const options = {
         method: 'POST',
-        headers: { // get your api key at https://rapidapi.com/gatzuma/api/deep-translate1
+        headers: {
             'content-type': 'application/json',
-            'X-RapidAPI-Key': '',
+            'X-RapidAPI-Key': '', // your api key
             'X-RapidAPI-Host': 'deep-translate1.p.rapidapi.com'
         },
         body: JSON.stringify({
@@ -65,11 +64,11 @@ let cachedWords: Map<keyof typeof words, Map<string, boolean>[]> = new Map();
 cachedWords.set('en', []);
 cachedWords.set('hu', []);
 
-export function isValidWord(word: string, language: keyof typeof words){
+export function isValidWord(word: string, language: keyof typeof words) {
     const cachedWordList = cachedWords.get(language) ?? [];
-    if(cachedWordList.some(wordList => (wordList.has(word) && wordList.get(word) == true))){
+    if(cachedWordList.some(wordList => (wordList.has(word) && wordList.get(word) == true))) {
         return true;
-    } else if(cachedWordList.some(wordList => (wordList.has(word) && wordList.get(word) == false))){
+    } else if(cachedWordList.some(wordList => (wordList.has(word) && wordList.get(word) == false))) {
         return false;
     }
     const isValid = words[language].get(fillInBlankLetters(word, language)) !== undefined;
@@ -77,23 +76,21 @@ export function isValidWord(word: string, language: keyof typeof words){
     return isValid;
 }
 
-export function fillInBlankLetters(word: string, language: keyof typeof words){
+export function fillInBlankLetters(word: string, language: keyof typeof words) {
     const wordList = words[language];
-    for(let i = 0; i < word.length; i++){
-        if(word[i] == '*'){
+    for(let i = 0; i < word.length; i++) {
+        if(word[i] == '*') {
             const validLetters = Object.keys(letterScores[language]);
             validLetters.forEach(letter => {
                 const newWord = word.replace('*', letter);
-                if(wordList.has(newWord)){
-                    word = newWord;
-                }
+                if(wordList.has(newWord)) word = newWord;
             });
         }
     }
     return word;
 }
 
-export function removeLetters(str: string, remove: string){
+export function removeLetters(str: string, remove: string) {
     let newStr = str;
     remove.split('').forEach(letter => {
         newStr = newStr.replace(letter, '');

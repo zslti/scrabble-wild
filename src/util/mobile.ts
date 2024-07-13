@@ -13,3 +13,11 @@ export function isMobile() {
         return navigator.userAgent.match(toMatchItem);
     });
 }
+
+export function isMobilePortrait() {
+    return window.innerWidth < window.innerHeight && isMobile();
+}
+
+export function isMobileLandscape() {
+    return window.innerWidth > window.innerHeight && isMobile();
+}

@@ -18,7 +18,14 @@ function Switch(props: Props) {
             {props.items.map((item, index) => {
                 return (
                     <React.Fragment key={index}>
-                        <input name="switch" className={'switch' + index} id={item.name} type="radio" checked={item.value == props.currentValue} onChange={(e) => {props.onChange(item.value)}}/>
+                        <input 
+                            name="switch" 
+                            className={'switch' + index} 
+                            id={item.name} 
+                            type="radio" 
+                            checked={item.value == props.currentValue} 
+                            onChange={(e) => {props.onChange(item.value)}}
+                        />
                         <label htmlFor={item.name} className="switch__label">{item.name}</label>
                     </React.Fragment>
                 )

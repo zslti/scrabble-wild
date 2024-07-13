@@ -1,7 +1,6 @@
-import React, { CSSProperties } from 'react'
+import { CSSProperties } from 'react'
 import { getLetterScore, letterScores } from '../util/scoring'
 import { languages } from '../util/languages'
-import { get } from 'http'
 import { Lobby } from '../util/firebase';
 
 export interface TileData {
@@ -13,17 +12,16 @@ export interface TileData {
     isFinalized?: boolean,
 }
 
-export function getStartingTileMatrix(size: number, layout: string, multiplier: number){
-    if(layout == 'random')
-        return getRandomTileLayout(size, multiplier);
+export function getStartingTileMatrix(size: number, layout: string, multiplier: number) {
+    if(layout == 'random') return getRandomTileLayout(size, multiplier);
     return getDefaultTileLayout(size);
 }
 
-function getDefaultTileLayout(size: number){
+function getDefaultTileLayout(size: number) {
     let matrix: TileData[][] = [];
-    for(let row = 0; row < size; row++){
+    for(let row = 0; row < size; row++) {
         matrix.push([])
-        for(let column = 0; column < size; column++){
+        for(let column = 0; column < size; column++) {
             let specialTile: string | null = null;
             if(row == 0 && column == 0) specialTile = '3w';
             else if(row == 0 && column == size - 1) specialTile = '3w';
@@ -71,10 +69,8 @@ function getDefaultTileLayout(size: number){
             else if(row == size - 1 && column == size - Math.floor(size / 4) - 1) specialTile = '2l';
             else if(column == 0 && row == size - Math.floor(size / 4) - 1) specialTile = '2l';
             else if(column == size - 1 && row == size - Math.floor(size / 4) - 1) specialTile = '2l';
-            if(specialTile != null)
-                matrix[row].push({row, column, specialTile: specialTile})
-            else
-                matrix[row].push({row, column})
+            if(specialTile != null) matrix[row].push({row, column, specialTile: specialTile})
+            else matrix[row].push({row, column})
         }
     }
     return matrix;
@@ -87,12 +83,12 @@ const randomTileMultipliers = {
     '3w': 8,
 }
 
-function getRandomTileLayout(size: number, multiplier: number){
+function getRandomTileLayout(size: number, multiplier: number) {
     let matrix: TileData[][] = [];
 
-    for(let row = 0; row < size; row++){
+    for(let row = 0; row < size; row++) {
         matrix.push([])
-        for(let column = 0; column < size; column++){
+        for(let column = 0; column < size; column++) {
             matrix[row].push({row, column})
         }
     }
@@ -101,17 +97,15 @@ function getRandomTileLayout(size: number, multiplier: number){
     Object.keys(tileMultipliers).forEach(key => {
         const k = key as keyof typeof tileMultipliers;
         tileMultipliers[k] = Math.floor(tileMultipliers[k] * multiplier * sizeMultiplier);
-        for(let i = 0; i < tileMultipliers[k]; i++){
+        for(let i = 0; i < tileMultipliers[k]; i++) {
             let row = Math.floor(Math.random() * size);
             let column = Math.floor(Math.random() * size);
             let retryCount = 0;
-            while(matrix[row][column].specialTile){
+            while(matrix[row][column].specialTile) {
                 row = Math.floor(Math.random() * size);
                 column = Math.floor(Math.random() * size);
                 retryCount++;
-                if(retryCount > 1000){
-                    break;
-                }
+                if(retryCount > 1000) break;
             }
             matrix[row][column].specialTile = key;
         }
@@ -130,25 +124,23 @@ interface Props {
     data: TileData,
 }
 
-export function getTileData(row: number, column: number, localTileChanges: Map<string, TileData>, lobbyData: Lobby){
+export function getTileData(row: number, column: number, localTileChanges: Map<string, TileData>, lobbyData: Lobby) {
     const id = getTileID(row, column);
-    if(localTileChanges.has(id)){
-        return localTileChanges.get(id) as TileData;
-    }
+    if(localTileChanges.has(id)) return localTileChanges.get(id) as TileData;
     return JSON.parse(lobbyData.tiles)[row][column] as TileData;
 }
 
-export function getTileID(row: number, column: number){
+export function getTileID(row: number, column: number) {
     return `${row}-${column}`;
 }
 
-export function isTileDroppable(tile: TileData){
+export function isTileDroppable(tile: TileData) {
     return tile.letter == null;
 }
 
-export function isMiddleTile(row: number, column: number, size: number){ 
+export function isMiddleTile(row: number, column: number, size: number) { 
     let middle: number = Math.floor(size / 2);
-    if(size % 2 == 1){
+    if(size % 2 == 1) {
         if(row == middle && column == middle) return true; 
     } else {
         if(row == middle && column == middle) return true;
@@ -159,21 +151,21 @@ export function isMiddleTile(row: number, column: number, size: number){
     return false;
 }
 
-export function getLetterMultiplier(tile: TileData){
+export function getLetterMultiplier(tile: TileData) {
     if(tile.specialTile == '2l') return 2;
     if(tile.specialTile == '3l') return 3;
     return 1;
 }
 
-export function getWordMultiplier(tile: TileData){
+export function getWordMultiplier(tile: TileData) {
     if(tile.specialTile == '2w') return 2;
     if(tile.specialTile == '3w') return 3;
     return 1;
 }
 
-function Tile(props: Props){
+function Tile(props: Props) {
     function getTileColor():string{
-        if(props.data.isFinalized){
+        if(props.data.isFinalized) {
             if(props.data.specialTile == '2l')
                 return '#e600ff';
             if(props.data.specialTile == '3l')
@@ -214,7 +206,9 @@ function Tile(props: Props){
             <>
                 {props.data.letter && props.data.language && <>
                     <div className="tile-letter">{props.data.letter}</div>
-                    <div className={`tile-value ${letterMultiplier == 3?'triple':(letterMultiplier == 2?'double':'')}`}>{letterMultiplier * getLetterScore(props.data.letter, props.data.language)}</div>
+                    <div className={`tile-value ${letterMultiplier == 3?'triple':(letterMultiplier == 2?'double':'')}`}>
+                        {letterMultiplier * getLetterScore(props.data.letter, props.data.language)}
+                    </div>
                 </>}
                 {!props.data.letter && props.data.specialTile && !props.isEditedTile && <div className="tile-double-letter">{props.data.specialTile}</div>}
             </>

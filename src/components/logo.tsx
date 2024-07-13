@@ -7,12 +7,10 @@ interface Props {
 
 function Logo(props: Props) {
     React.useEffect(() => {
-        if (props.animated) {
+        if(props.animated) {
             setTimeout(() => {
                 const logo2 = document.querySelector('.Logo2');
-                if (logo2) {
-                    logo2.classList.add('active')
-                }
+                logo2?.classList.add('active')
             }, 200)
         }
     }, [props.animated])
