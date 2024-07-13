@@ -22,7 +22,7 @@ export function getLetterScore(letter: string, language: keyof typeof letterScor
     return letterScores[language][l];
 }
 
-function isConnected(tileData: TileData[][], row: number, column: number){
+function isConnected(tileData: TileData[][], row: number, column: number) {
     if(row > 0 && tileData[row-1][column].letter != '' && tileData[row-1][column].letter != null) return true;
     if(row < tileData.length-1 && tileData[row+1][column].letter != '' && tileData[row+1][column].letter != null) return true;
     if(column > 0 && tileData[row][column-1].letter != '' && tileData[row][column-1].letter != null) return true;
@@ -30,7 +30,7 @@ function isConnected(tileData: TileData[][], row: number, column: number){
     return false;
 }
 
-function isConnectedToFinalizedTile(tileData: TileData[][], row: number, column: number, tileChanges: Map<string, TileData>, direction?: 'horizontal' | 'vertical'){
+function isConnectedToFinalizedTile(tileData: TileData[][], row: number, column: number, tileChanges: Map<string, TileData>, direction?: 'horizontal' | 'vertical') {
     if(direction == undefined || direction == 'horizontal') {
         if(row > 0 && tileData[row-1][column].isFinalized && !tileChanges.has(getTileID(row-1, column))) return true;
         if(row < tileData.length-1 && tileData[row+1][column].isFinalized && !tileChanges.has(getTileID(row+1, column))) return true;
@@ -42,8 +42,76 @@ function isConnectedToFinalizedTile(tileData: TileData[][], row: number, column:
     return false;
 }
 
+export function getCurrentRoundPlayer(lobbyData: Lobby) {
+    if(!lobbyData || lobbyData.round === undefined) return '';
+    return lobbyData.players[lobbyData.round % lobbyData.players.length];
+}
+
 export function isCurrentRound(lobbyData: Lobby, username: string) {
-    return lobbyData.players[lobbyData.round % lobbyData.players.length] == username;
+    return getCurrentRoundPlayer(lobbyData) == username;
+}
+
+export function getCurrentRoundText(lobbyData: Lobby, username: string) {
+    if(lobbyData.round === undefined) return '';
+    if(isCurrentRound(lobbyData, username)) return 'Your';
+    return `${getCurrentRoundPlayer(lobbyData)}'s`;
+}
+
+interface Word {
+    word: string;
+    startPosition: {row: number, column: number};
+    endPosition: {row: number, column: number};
+    direction: 'horizontal' | 'vertical';
+}
+
+function getWordStartingAt(tileData: TileData[][], row: number, column: number, direction: 'horizontal' | 'vertical') {
+    let word = '';
+    const startPos = {row, column};
+    if(direction == 'horizontal') {
+        if(column > 0 && tileData[row][column-1].letter != '' && tileData[row][column-1].letter != null) return null;
+        while(column < tileData.length && tileData[row][column].letter != '' && tileData[row][column].letter != null) {
+            word += tileData[row][column].letter;
+            column++;
+        }
+        column--;
+    } else {
+        if(row > 0 && tileData[row-1][column].letter != '' && tileData[row-1][column].letter != null) return null;
+        while(row < tileData.length && tileData[row][column].letter != '' && tileData[row][column].letter != null) {
+            word += tileData[row][column].letter;
+            row++;
+        }
+        row--;
+    }
+    if(word.length <= 1) return null;
+    return {word, startPosition: startPos, endPosition: {row, column}, direction};
+}
+
+function isWordAffectedByTileChanges(word: Word, tileChanges: Map<string, TileData>) {
+    for(let row = word.startPosition.row; row <= word.endPosition.row; row++) {
+        for(let column = word.startPosition.column; column <= word.endPosition.column; column++) {
+            if(tileChanges.has(getTileID(row, column))) return true;
+        }
+    }
+    return false;
+}
+
+function getScore(words: Word[], tileData: TileData[][], tileChanges: Map<string, TileData>, lobbyData: Lobby) {
+    let score = 0;
+    let wordsUsedForScoring: string[] = [];
+    words.forEach((word) => {
+        if(!isWordAffectedByTileChanges(word, tileChanges)) return;
+        let p = 0;
+        let m = 1;
+        for(let row = word.startPosition.row; row <= word.endPosition.row; row++) {
+            for(let column = word.startPosition.column; column <= word.endPosition.column; column++) {
+                p += getLetterMultiplier(tileData[row][column]) * getLetterScore((tileData[row][column].letter ?? ''), lobbyData.settings.language as keyof typeof languages);
+                m *= getWordMultiplier(tileData[row][column]);
+            }
+        }
+        score += p * m;
+        wordsUsedForScoring.push(word.word);
+    });
+    return [score, wordsUsedForScoring];
 }
 
 export function isFinalizable(lobbyData: Lobby, tileChanges: Map<string, TileData>, username: string) {
@@ -60,13 +128,14 @@ export function isFinalizable(lobbyData: Lobby, tileChanges: Map<string, TileDat
             if(tileData[row][column].letter != '' && tileData[row][column].letter != null && !isConnected(tileData, row, column)) {
                 return [false, 'Invalid placement'];
             }
-            if(!connectedToPreviousWord && tileChanges.has(getTileID(row, column)) && tileData[row][column].letter != '' && tileData[row][column].letter != null && isConnectedToFinalizedTile(tileData, row, column, tileChanges)) {
+            if(!connectedToPreviousWord && tileChanges.has(getTileID(row, column)) && tileData[row][column].letter != '' 
+                && tileData[row][column].letter != null && isConnectedToFinalizedTile(tileData, row, column, tileChanges)) {
                 connectedToPreviousWord = true;
             }
         }
     }
     if(lobbyData.round == 0) connectedToPreviousWord = true;
-    if(!connectedToPreviousWord) return [false, 'Invalid placement'];
+    if(!connectedToPreviousWord && lobbyData.wasFirstWordPlaced) return [false, 'Invalid placement'];
     // check if the tiles are all in the same row or column
     let rows = new Set<number>();
     let columns = new Set<number>();
@@ -75,111 +144,49 @@ export function isFinalizable(lobbyData: Lobby, tileChanges: Map<string, TileDat
         columns.add(tile.column);
     });
     if(rows.size > 1 && columns.size > 1) return [false, 'Invalid placement'];
-    // get the word
-    let mainWord = '';
-    let otherWords = [] as string[];
-    let points = 0;
-    let wordMultiplier = 1;
-    let tilesUsedForScoring = [] as string[];
-    if(rows.size === 1) {
-        let row = rows.values().next().value;
-        let initialStartColumn, initialEndColumn;
-        let startColumn = initialStartColumn = Math.min(...Array.from(columns));
-        while(startColumn > 0 && tileData[row][startColumn-1].letter != '' && tileData[row][startColumn-1].letter != null) startColumn--;
-        let endColumn = initialEndColumn = Math.max(...Array.from(columns));
-        while(endColumn < tileData[row].length-1 && tileData[row][endColumn+1].letter != '' && tileData[row][endColumn+1].letter != null) endColumn++;
-        for(let column = startColumn; column <= endColumn; column++) {
-            if(!tilesUsedForScoring.includes(getTileID(row, column))){
-                mainWord += tileData[row][column].letter;
-                points += getLetterMultiplier(tileData[row][column]) * getLetterScore(tileData[row][column].letter ?? '', lobbyData.settings.language as keyof typeof languages);
-                wordMultiplier *= getWordMultiplier(tileData[row][column]);
-                tilesUsedForScoring.push(getTileID(row, column));
+    
+    // get all words and check if they are valid
+    let words: Word[] = [];
+    for(let row = 0; row < tileData.length; row++) {
+        for(let column = 0; column < tileData[row].length; column++) {
+            const horizontalWord = getWordStartingAt(tileData, row, column, 'horizontal');
+            const verticalWord = getWordStartingAt(tileData, row, column, 'vertical');
+            if(horizontalWord) {
+                if(!isValidWord(horizontalWord.word, lobbyData.settings.language as keyof typeof languages)) return [false, 'Invalid word'];
+                words.push(horizontalWord);
             }
-        }
-        for(let column = initialStartColumn; column <= initialEndColumn; column++) {
-            if(isConnectedToFinalizedTile(tileData, row, column, tileChanges, 'horizontal')) {
-                let startRow = row;
-                while(startRow > 0 && tileData[startRow-1][column].letter != '' && tileData[startRow-1][column].letter != null) startRow--;
-                let endRow = row;
-                while(endRow < tileData.length-1 && tileData[endRow+1][column].letter != '' && tileData[endRow+1][column].letter != null) endRow++;
-                let word = '';
-                let p = 0;
-                let m = 1;
-                for(let r = startRow; r <= endRow; r++) {
-                    if(!tilesUsedForScoring.includes(getTileID(row, column))){
-                        word += tileData[r][column].letter;
-                        p += getLetterMultiplier(tileData[r][column]) * getLetterScore(tileData[r][column].letter ?? '', lobbyData.settings.language as keyof typeof languages);
-                        m *= getWordMultiplier(tileData[r][column]);
-                        tilesUsedForScoring.push(getTileID(row, column));
-                    }
-                }
-                if(word != mainWord) {
-                    points += p;
-                    wordMultiplier *= m;
-                    otherWords.push(word);
-                }
-            }
-        }
-    } 
-    if(columns.size === 1 && mainWord.length <= 1) {
-        if(mainWord.length <= 1) mainWord = '';
-        let column = columns.values().next().value;
-        let initialStartRow, initialEndRow;
-        let startRow = initialStartRow = Math.min(...Array.from(rows));
-        while(startRow > 0 && tileData[startRow-1][column].letter != '' && tileData[startRow-1][column].letter != null) startRow--;
-        let endRow = initialEndRow = Math.max(...Array.from(rows));
-        while(endRow < tileData.length-1 && tileData[endRow+1][column].letter != '' && tileData[endRow+1][column].letter != null) endRow++;
-        for(let row = startRow; row <= endRow; row++) {
-            if(!tilesUsedForScoring.includes(getTileID(row, column))){
-                mainWord += tileData[row][column].letter;
-                points += getLetterMultiplier(tileData[row][column]) * getLetterScore(tileData[row][column].letter ?? '', lobbyData.settings.language as keyof typeof languages);
-                wordMultiplier *= getWordMultiplier(tileData[row][column]);
-                tilesUsedForScoring.push(getTileID(row, column));
-            }
-        }
-        for(let row = initialStartRow; row <= initialEndRow; row++) {
-            if(isConnectedToFinalizedTile(tileData, row, column, tileChanges, 'vertical')) {
-                let startColumn = column;
-                while(startColumn > 0 && tileData[row][startColumn-1].letter != '' && tileData[row][startColumn-1].letter != null) startColumn--;
-                let endColumn = column;
-                while(endColumn < tileData[row].length-1 && tileData[row][endColumn+1].letter != '' && tileData[row][endColumn+1].letter != null) endColumn++;
-                let word = '';
-                let p = 0;
-                let m = 1;
-                for(let c = startColumn; c <= endColumn; c++) {
-                    if(!tilesUsedForScoring.includes(getTileID(row, column))){
-                        word += tileData[row][c].letter;
-                        p += getLetterMultiplier(tileData[row][c]) * getLetterScore(tileData[row][c].letter ?? '', lobbyData.settings.language as keyof typeof languages);
-                        m *= getWordMultiplier(tileData[row][c]);
-                        tilesUsedForScoring.push(getTileID(row, column));
-                    }
-                }
-                if(word != mainWord) {
-                    points += p;
-                    wordMultiplier *= m;
-                    otherWords.push(word);
-                }
+            if(verticalWord) {
+                if(!isValidWord(verticalWord.word, lobbyData.settings.language as keyof typeof languages)) return [false, 'Invalid word'];
+                words.push(verticalWord);
             }
         }
     }
-    // check if the word is valid
-    if(!isValidWord(mainWord, lobbyData.settings.language as keyof typeof languages)) return [false, 'Invalid word'];
-    // check if all the other words are valid
-    otherWords.forEach((word) => {
-        if(!isValidWord(word, lobbyData.settings.language as keyof typeof languages)) return [false, 'Invalid word'];
-    });
-    if(!otherWords.includes(mainWord)){
-        otherWords.push(mainWord);
-    }
-    if(lobbyData.round == 0){
+
+    // check if the word needs to be connected to the center
+    if(!lobbyData.wasFirstWordPlaced) {
         let middleTile: number = Math.floor(tileData.length / 2);
-        if(lobbyData.settings.boardSize % 2 == 1){
+        if(lobbyData.settings.boardSize % 2 == 1) {
             if(!tileChanges.has(getTileID(middleTile, middleTile))) return [false, 'Start from center']; 
         } else {
-            if(!tileChanges.has(getTileID(middleTile, middleTile)) && !tileChanges.has(getTileID(middleTile-1, middleTile)) && !tileChanges.has(getTileID(middleTile, middleTile-1)) && !tileChanges.has(getTileID(middleTile-1, middleTile-1))) return [false, 'Start from center'];
+            if(!tileChanges.has(getTileID(middleTile, middleTile)) && !tileChanges.has(getTileID(middleTile-1, middleTile)) 
+                && !tileChanges.has(getTileID(middleTile, middleTile-1)) && !tileChanges.has(getTileID(middleTile-1, middleTile-1))) return [false, 'Start from center'];
         }
     }
-    // check if the its the players turn
-    if(!isCurrentRound(lobbyData, username)) return [false, otherWords, points * wordMultiplier];
-    return [true, otherWords, points * wordMultiplier];
+    
+    const [score, wordsUsedForScoring] = getScore(words, tileData, tileChanges, lobbyData);
+    return [isCurrentRound(lobbyData, username), [], score, wordsUsedForScoring];
+}   
+
+export function getOrdinal(n: number) {
+    const suffixes = ["th", "st", "nd", "rd"];
+    const value = Math.abs(n);
+
+    if(value % 100 >= 11 && value % 100 <= 13) {
+        return `${n}th`;
+    }
+
+    const lastDigit = value % 10;
+    const suffix = suffixes[lastDigit] || suffixes[0];
+
+    return `${n}${suffix}`;
 }

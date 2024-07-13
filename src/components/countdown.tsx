@@ -21,7 +21,7 @@ function Countdown(props: Props) {
 
     var timerEl = document.querySelector('.timer');
 
-    function initTimer (t: string) {
+    function initTimer(t: string) {
         timerEl = document.querySelector('.timer');
         let minutesGroupEl = timerEl?.querySelector('.minutes-group');
         let secondsGroupEl = timerEl?.querySelector('.seconds-group');
@@ -49,7 +49,7 @@ function Countdown(props: Props) {
 
             let countdownSeconds = await getSecondsToCountdown();
             
-            if(countdownSeconds <= 0){
+            if(countdownSeconds <= 0) {
                 updateTimerDisplay(['0','0','0','0']);
                 return;
             }
@@ -66,32 +66,30 @@ function Countdown(props: Props) {
 
             timestr = time.min + time.sec;
             let timeNumbers: any[] = [];
-            if(timestr.split != null)
-                timeNumbers = timestr.split('');
+            if(timestr.split != null) timeNumbers = timestr.split('');
             updateTimerDisplay(timeNumbers);
 
-            if(timestr != '0000')
-                setTimeout(updateTimer, 1000);
+            if(timestr != '0000') setTimeout(updateTimer, 1000);
         }
 
         async function updateTimerDisplay(arr: any[]) {
-            if(isEqual(arr, ['0','0','0','0'])){
+            // initTimer("01:59");
+            if(isEqual(arr, ['0','0','0','0'])) {
                 timerEl?.parentElement?.parentElement?.classList.add('hidden');
                 const now = await getTime();
-                if(await getSecondsToCountdown() == 0 && now - timerEndTime > 10000){
+                if(await getSecondsToCountdown() == 0 && now - timerEndTime > 10000) {
                     timerEndTime = now;
                     props.onTimerEnd?.();
                 }
             }
-            else
-                timerEl?.parentElement?.parentElement?.classList.remove('hidden');
+            else timerEl?.parentElement?.parentElement?.classList.remove('hidden');
             animateNum(minutesGroup.firstNum, arr[0]);
             animateNum(minutesGroup.secondNum, arr[1]);
             animateNum(secondsGroup.firstNum, arr[2]);
             animateNum(secondsGroup.secondNum, arr[3]);
         }
 
-        function animateNum (group: any, arrayValue: any) {
+        function animateNum(group: any, arrayValue: any) {
             if(group == null) return;
             gsap.killTweensOf(group.querySelector('.number-grp-wrp'));
             gsap.to(group.querySelector('.number-grp-wrp'), 1, {
@@ -104,7 +102,7 @@ function Countdown(props: Props) {
     const countdownElement = document.querySelector('.countdown');
     setInterval(() => {
         setCountdown(props.countingTo);
-        if(countdownElement != null){
+        if(countdownElement != null) {
             const event = new MouseEvent('click', {
                 view: window,
                 bubbles: true,
@@ -112,12 +110,10 @@ function Countdown(props: Props) {
                 clientX: 20,
             });
             countdownElement.dispatchEvent(event);
-        
         }
     }, 1000);
 
     async function getSecondsToCountdown() {
-        // const now = Date.now();
         const now = await getTime();
         const difference = props.countingTo - now;
         return Math.floor(difference / 1000);

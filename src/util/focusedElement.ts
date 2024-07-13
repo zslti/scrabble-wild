@@ -5,7 +5,7 @@ const excludedClasses = ['countdown']
 function setFocusedElement(element: HTMLElement) {
     let isExcluded = false;
     excludedClasses.forEach((excludedClass) => {
-        if (element.classList.contains(excludedClass)) {
+        if(element.classList.contains(excludedClass)) {
             isExcluded = true;
             return;
         }

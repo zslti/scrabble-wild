@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react'
+import React from 'react'
 import AnimatedAppear from './animatedAppear';
 
 interface Props {
@@ -10,7 +10,7 @@ interface Props {
     onClick?: (() => void) | (() => Promise<boolean>),
 }
 
-function Button(props: Props){
+function Button(props: Props) {
     const [isLoading, setIsLoading] = React.useState(false);
 
     React.useEffect(() => {
@@ -25,7 +25,14 @@ function Button(props: Props){
         <div className={"button-outline " + (props.isInactive?"inactive ":"") + props.className}>
             <span className={props.className} style={{width: 0}}>
                 <div className={"box-outline-gradient " + props.className}>
-                    <button onClick={async () => {let shouldLoad = true; if(props.onClick != null) {shouldLoad = await props.onClick() ?? true} setIsLoading((props.isLoadingOnClick ?? false) && shouldLoad);}} className={props.className}><i className={isLoading?"fa-solid fa-circle-notch":props.icon}></i>{props.text}</button>
+                    <button onClick={async () => {
+                            let shouldLoad = true; 
+                            if(props.onClick != null) {shouldLoad = await props.onClick() ?? true} 
+                            setIsLoading((props.isLoadingOnClick ?? false) && shouldLoad);
+                        }} className={props.className}>
+                        <i className={isLoading?"fa-solid fa-circle-notch":props.icon}></i>
+                        {props.text}
+                    </button>
                 </div>
             </span>
         </div>
@@ -40,14 +47,23 @@ interface GameButtonProps {
     className?: string,
     icon?: string,
     isInactive?: boolean,
+    isHoverableWhileInactive?: boolean,
     onClick?: (() => void),
 }
 
-export function GameButton(props: GameButtonProps){
+export function GameButton(props: GameButtonProps) {
     return (
         <div className="game-button-container">
-            <div onClick={props.onClick} className={'game-button ' + (props.isInactive?'inactive ':'') + props.className}>
-                <i className={props.icon}></i>{props.text}<br/><AnimatedAppear height='1rem' transitionTime='.3s' isVisible={props.text2 != null} childComponent={<div style={{fontSize: '.8rem', pointerEvents: 'none'}}>{props.text2}</div>}/>
+            <div onClick={props.onClick} className={'game-button ' + (props.isInactive?'inactive ':'') + (props.isHoverableWhileInactive?'hoverable ':'') + props.className}>
+                {props.icon && <i className={props.icon}></i>}
+                {props.text}
+                <br/>
+                <AnimatedAppear 
+                    height='1rem' 
+                    transitionTime='.3s' 
+                    isVisible={props.text2 != null} 
+                    childComponent={<div style={{fontSize: '.8rem', pointerEvents: 'none'}}>{props.text2}</div>}
+                />
             </div>
         </div>
     )
