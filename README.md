@@ -1,6 +1,6 @@
 # ⚡What is ScrabbleWild?
 
-ScrabbleWild is a multiplayer word game built with React and Firebase. Try it out <a href="https://zslti.github.io/scrabblewild/"><kbd>here</kbd></a>.
+ScrabbleWild is an online multiplayer word game built with React and Firebase. Try it out <a href="https://zslti.github.io/scrabblewild/"><kbd>here</kbd></a>.
 
 This project aims to be an enhanced version of the board game with a clean UI and some added elements to make gameplay more enjoyable.
 
@@ -16,14 +16,16 @@ This project aims to be an enhanced version of the board game with a clean UI an
 
 🉑️ Multiple languages
 
+⌚ Countdown timer for each round with customizable duration
+
 👫 Easily invite your friends with an invitation link
 
-🎮 Ability to play the game... obviously
+📐 Fully responsive UI
 
 # 🚀 Demo
 
 <p align="center">
-  <img src="https://github.com/zslti/scrabble-wild/assets/82903515/0e9b5b84-b895-424d-9c1c-9700057ca23a" alt="" />
+  <img src="https://github.com/user-attachments/assets/b48cf7b8-29a8-4c2c-bfab-e7a4660de5a8" alt="" />
 </p>
 
 # ⁉️ How to play?
@@ -45,13 +47,11 @@ Each new word must connect to an existing word on the game board.
 
 # 🌅 Planned features
 
-✅ Lobby system
-
-✅ Implement base game features
+✅ Base game features
 
 ✅ Round timer
 
-❌ Scoreboard
+✅ Scoreboard
 
 ❌ Achievements
 
